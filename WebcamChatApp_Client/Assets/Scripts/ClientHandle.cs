@@ -16,7 +16,7 @@ public class ClientHandle : MonoBehaviour
         string _msg = _packet.ReadString();
         int _id = _packet.ReadInt();
 
-        Debug.Log($"Message from server: {_msg}");
+        
         Client.instance.myId = _id;
         ClientSend.WelcomeReceived();
 
@@ -33,10 +33,7 @@ public class ClientHandle : MonoBehaviour
         string _username = _packet.ReadString();
 
         AppManager.instance.AddChatter(_id, _username);
-        if (MainManager.instance != null)
-        {
-            MainManager.instance.UpdateLobbyPanel();
-        }
+
     }
 
     /// <summary>
@@ -68,7 +65,7 @@ public class ClientHandle : MonoBehaviour
         AppManager.chatters.Remove(_id);
         if (MainManager.instance != null)
         {
-            MainManager.instance.UpdateLobbyPanel();
+            //MainManager.instance.UpdateLobbyPanel();
         }
        
     }
@@ -79,11 +76,11 @@ public class ClientHandle : MonoBehaviour
     /// <param name="_packet"></param>
     public static void ServerChatMessage(Packet _packet)
     {
-        int _id = 0;
+        
         string _message = _packet.ReadString();
         if (MainManager.instance != null)
         {
-            MainManager.instance.AddMessageToChatPanel(_id, _message, null);
+            MainManager.instance.AddServerAnnouncement(_message);
         }
     }
 

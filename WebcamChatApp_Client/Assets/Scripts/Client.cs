@@ -230,10 +230,9 @@ public class Client : MonoBehaviour
 
         private void Disconnect()
         {
-            if (instance)
-            {
-                instance.Disconnect();
-            }
+
+            instance.Disconnect();
+            
             stream = null;
             receivedData = null;
             receiveBuffer = null;
@@ -298,6 +297,7 @@ public class Client : MonoBehaviour
 
                 if (_data.Length < 4)
                 {
+                    instance.Disconnect();
                     return;
                 }
 
@@ -305,7 +305,7 @@ public class Client : MonoBehaviour
             }
             catch
             {
-
+                Disconnect();
             }
         }
 
@@ -330,6 +330,14 @@ public class Client : MonoBehaviour
 
         }
 
+        private void Disconnect()
+        {
+            instance.Disconnect();
+
+            endPoint = null;
+            socket = null;
+        }
+
 
     }
 
@@ -341,7 +349,10 @@ public class Client : MonoBehaviour
         packetHandlers = new Dictionary<int, PacketHandler>()
         {
             {(int)ServerPackets.welcome,ClientHandle.Welcome },
-            {(int)ServerPackets.udpTest,ClientHandle.UDPTest }
+            {(int)ServerPackets.udpTest,ClientHandle.UDPTest },
+            {(int)ServerPackets.chatterDisconnected,ClientHandle.ChatterDisconnected },
+            {(int)ServerPackets.addChatter,ClientHandle.AddChatter },         
+            {(int)ServerPackets.serverChatMessage,ClientHandle.ServerChatMessage },
         };
         Debug.Log("Initialized packets.");
     }
@@ -387,7 +398,7 @@ public class Client : MonoBehaviour
                 {
                     
                     
-                    SceneManager.LoadScene(0);
+                    SceneManager.LoadScene("MainMenu");
                     MainMenuManager.errorMessage = "Error: Failed to find/connect to server.";
                 }
 
@@ -418,13 +429,19 @@ public class Client : MonoBehaviour
             
             isConnected = false;
             tcp.socket.Close();
+            if (udp.socket != null)
+            {
+                udp.socket.Close();
+                Debug.Log("Disconnected from the server.");
+            }
+
             
-            Debug.Log("Disconnected from the server.");
+            
             if (loadMainMenu)
             {
                 ThreadManager.ExecuteOnMainThread(() =>
                 {
-                    SceneManager.LoadScene(0);
+                    SceneManager.LoadScene("MainMenu");
                 });
                 
             }

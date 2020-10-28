@@ -11,12 +11,12 @@ namespace WebcamChatApp_Server
             int _clientToCheck = _packet.ReadInt();
             string _username = _packet.ReadString();
 
-            Console.WriteLine($"{Server.clients[_clientToCheck].tcp.socket.Client.RemoteEndPoint} connected successfully and is now player {_fromClient}");
+            Console.WriteLine($"{Server.clients[_clientToCheck].tcp.socket.Client.RemoteEndPoint} connected successfully and is now player {_fromClient} with username: {_username}");
             if (_fromClient != _clientToCheck)
             {
                 Console.WriteLine($"Player \"{_username}\" (ID: {_fromClient}) has assumed the wrong client ID ({_clientToCheck})!");
             }
-            //Server.clients[_fromClient].SendIntoChat(_username);
+            Server.clients[_fromClient].SendIntoChat(_username);
         }
 
         public static void ChatterMessage(int _fromClient, Packet _packet)

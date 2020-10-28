@@ -87,6 +87,38 @@ namespace WebcamChatApp_Server
             }
         }
 
+        public static void AddChatter(int _toClient, Chatter _chatter)
+        {
+            using (Packet _packet = new Packet((int)ServerPackets.addChatter))
+            {
+                _packet.Write(_chatter.id);
+                _packet.Write(_chatter.username);
+
+                SendTCPData(_toClient, _packet);
+
+            }
+        }
+
+        public static void ServerChatMessage(string _msg)
+        {
+            using (Packet _packet = new Packet((int)ServerPackets.serverChatMessage))
+            {
+                _packet.Write(_msg);
+
+                SendTCPDataToAll(_packet);
+            }
+        }
+
+        public static void ChatterDisconnected(int _clientId)
+        {
+            using (Packet _packet = new Packet((int)ServerPackets.chatterDisconnected))
+            {
+                _packet.Write(_clientId);
+
+                SendTCPDataToAll(_packet);
+            }
+        }
+
         #endregion
 
     }

@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,6 +13,7 @@ public class MainManager : MonoBehaviour
     public InputField messageInputField;
     public GameObject chatPanel, messageObject;
     public GameObject lobbyPanel, lobbyTextObject;
+    public TextMeshProUGUI serverAnnouncementText;
     public int maxMessages = 40;
     
     public List<GameObject> messageGameobjects = new List<GameObject>();
@@ -35,10 +37,7 @@ public class MainManager : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyUp(KeyCode.Return))
-        {
-            SendMessageToChat();
-        }
+
     }
 
     /// <summary>
@@ -91,6 +90,21 @@ public class MainManager : MonoBehaviour
         messageGameobjects.Add(_messageObject);
 
     }
+
+
+    public void AddServerAnnouncement(string announcement)
+    {
+        serverAnnouncementText.text = $"<b>Server:</b> {announcement}";
+        StopAllCoroutines();
+        StartCoroutine(ServerAnnouncementRoutine());
+    }
+
+    private IEnumerator ServerAnnouncementRoutine()
+    {
+        yield return new WaitForSeconds(5f);
+        serverAnnouncementText.text = "";
+    }
+
     /// <summary>
     /// Tell client that we want to leave the chat
     /// </summary>

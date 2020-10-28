@@ -61,7 +61,7 @@ public class MainMenuManager : MonoBehaviour
             {
                 Client.instance.ConnectToServer(usernameField.text, ipAddressField.text, portField.text);
 
-                //SceneManager.LoadScene(1);
+                SceneManager.LoadScene("ChatRoom");
             }
         }
         else

@@ -8,7 +8,10 @@ namespace WebcamChatApp_Server
     public enum ServerPackets
     {
         welcome = 1,
-        udpTest
+        udpTest,
+        chatterDisconnected,
+        addChatter,
+        serverChatMessage
     }
 
     /// <summary>Sent from client to server.</summary>

@@ -79,7 +79,7 @@ namespace WebcamChatApp_Server
                     int _byteLength = stream.EndRead(_result);
                     if (_byteLength <= 0)
                     {
-                        //Server.clients[id].Disconnect();
+                        Server.clients[id].Disconnect();
                         return;
                     }
 
@@ -96,7 +96,7 @@ namespace WebcamChatApp_Server
                 {
 
                     Console.WriteLine($"Error receiving TCP data: {ex}");
-                    //Server.clients[id].Disconnect();
+                    Server.clients[id].Disconnect();
                 }
             }
 
@@ -173,7 +173,6 @@ namespace WebcamChatApp_Server
             public void Connect(IPEndPoint _endPoint)
             {
                 endPoint = _endPoint;
-                ServerSend.UDPTest(id);
             }
 
             public void SendData(Packet _packet)
@@ -194,34 +193,66 @@ namespace WebcamChatApp_Server
                         Server.packetHandlers[_packetId](id, _packet);
                     }
                 });
+            }
 
-
+            public void Disconnect()
+            {
+                endPoint = null;
             }
         }
 
 
-        //public void Disconnect()
-        //{
+        public void Disconnect()
+        {
 
 
-        //    Console.WriteLine($"{tcp.socket.Client.RemoteEndPoint} has disconnected.");
-        //    string _username = chatter.username;
-        //    ThreadManager.ExecuteOnMainThread(() =>
-        //    {
-        //        chatter = null;
-        //    });
-
-
-
-        //    tcp.Disconnect();
-
-        //    ServerSend.ChatterDisconnected(id);
-        //    ServerSend.ServerChatMessage($"{_username} disconnected from chat.");
+            Console.WriteLine($"{tcp.socket.Client.RemoteEndPoint} has disconnected.");
+            string _username = chatter.username;
+            ThreadManager.ExecuteOnMainThread(() =>
+            {
+                chatter = null;
+            });
 
 
 
+            tcp.Disconnect();
+            udp.Disconnect();
 
-        //}
+            ServerSend.ChatterDisconnected(id);
+            ServerSend.ServerChatMessage($"{_username} disconnected from chat.");
+
+
+
+
+        }
+
+        public void SendIntoChat(string _playerName)
+        {
+            chatter = new Chatter(id, _playerName);
+
+
+            foreach (Client _client in Server.clients.Values)
+            {
+                if (_client.chatter != null)
+                {
+                    if (_client.id != id)
+                    {
+                        ServerSend.AddChatter(id, _client.chatter);
+                    }
+                }
+            }
+
+
+            foreach (Client _client in Server.clients.Values)
+            {
+                if (_client.chatter != null)
+                {
+                    ServerSend.AddChatter(_client.id, chatter);
+                }
+            }
+            ServerSend.ServerChatMessage($"{_playerName} joined the chat.");
+
+        }
 
         public void LeaveChat()
         {
