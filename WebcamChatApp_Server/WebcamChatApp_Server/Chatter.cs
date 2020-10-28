@@ -21,7 +21,7 @@ namespace WebcamChatApp_Server
         public void SetMessage(string _msg)
         {
 
-            ServerSend.ChatterMessage(id, _msg);
+            //ServerSend.ChatterMessage(id, _msg);
         }
     }
 }

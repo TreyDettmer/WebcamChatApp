@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using UnityEngine;
 /// <summary>
 /// Handles data sent from server
@@ -18,6 +19,8 @@ public class ClientHandle : MonoBehaviour
         Debug.Log($"Message from server: {_msg}");
         Client.instance.myId = _id;
         ClientSend.WelcomeReceived();
+
+        Client.instance.udp.Connect(((IPEndPoint)Client.instance.tcp.socket.Client.LocalEndPoint).Port);
     }
 
     /// <summary>
@@ -82,5 +85,12 @@ public class ClientHandle : MonoBehaviour
         {
             MainManager.instance.AddMessageToChatPanel(_id, _message, null);
         }
+    }
+
+    public static void UDPTest(Packet _packet)
+    {
+        string _msg = _packet.ReadString();
+        Debug.Log($"Recieved packet via UDP. Contains message: {_msg}");
+        ClientSend.UDPTestReceived();
     }
 }

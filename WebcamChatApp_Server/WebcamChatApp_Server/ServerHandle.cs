@@ -16,7 +16,7 @@ namespace WebcamChatApp_Server
             {
                 Console.WriteLine($"Player \"{_username}\" (ID: {_fromClient}) has assumed the wrong client ID ({_clientToCheck})!");
             }
-            Server.clients[_fromClient].SendIntoChat(_username);
+            //Server.clients[_fromClient].SendIntoChat(_username);
         }
 
         public static void ChatterMessage(int _fromClient, Packet _packet)
@@ -24,6 +24,13 @@ namespace WebcamChatApp_Server
             string _msg = _packet.ReadString();
 
             Server.clients[_fromClient].chatter.SetMessage(_msg);
+        }
+
+        public static void UDPTestReceived(int _fromClient, Packet _packet)
+        {
+            string _msg = _packet.ReadString();
+
+            Console.WriteLine($"Recieved packet via UDP. Contains message: {_msg}");
         }
 
     }

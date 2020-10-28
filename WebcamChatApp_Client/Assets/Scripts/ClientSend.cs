@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using UnityEngine;
 
 /// <summary>
@@ -15,6 +16,12 @@ public class ClientSend : MonoBehaviour
     {
         _packet.WriteLength();
         Client.instance.tcp.SendData(_packet);
+    }
+
+    private static void SendUDPData(Packet _packet)
+    {
+        _packet.WriteLength();
+        Client.instance.udp.SendData(_packet);
     }
 
     #region Packets
@@ -33,16 +40,14 @@ public class ClientSend : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Send a request to add a message to the chat
-    /// </summary>
-    /// <param name="msg"></param>
-    public static void ChatterMessage(string msg)
+
+    public static void UDPTestReceived()
     {
-        using (Packet _packet = new Packet((int)ClientPackets.chatterMessage))
+        using (Packet _packet = new Packet((int)ClientPackets.udpTestReceived))
         {
-            _packet.Write(msg);
-            SendTCPData(_packet);
+            _packet.Write("Received a UDP packet.");
+
+            SendUDPData(_packet);
         }
     }
 

@@ -17,6 +17,7 @@ public class Client : MonoBehaviour
     public int port = 32137;
     public int myId = 0;
     public TCP tcp;
+    public UDP udp;
 
     public string username;
     private float lastMessageSentTime = 0f;
@@ -45,7 +46,7 @@ public class Client : MonoBehaviour
 
     private void Start()
     {
-        tcp = new TCP();
+
     }
 
     private void OnApplicationQuit()
@@ -71,7 +72,8 @@ public class Client : MonoBehaviour
                 port = 1;
             }
         }
-
+        tcp = new TCP();
+        udp = new UDP();
         InitializeClientData();
 
         isConnected = true;
@@ -243,6 +245,94 @@ public class Client : MonoBehaviour
 
     }
 
+    public class UDP
+    {
+        public UdpClient socket;
+        public IPEndPoint endPoint;
+
+        public UDP()
+        {
+            endPoint = new IPEndPoint(IPAddress.Parse(instance.ip), instance.port);
+
+        }
+
+        public void Connect(int _localPort)
+        {
+            socket = new UdpClient(_localPort);
+
+            socket.Connect(endPoint);
+            socket.BeginReceive(ReceiveCallback, null);
+
+            using (Packet _packet = new Packet())
+            {
+                SendData(_packet);
+            }
+        }
+
+        public void SendData(Packet _packet)
+        {
+            try
+            {
+                _packet.InsertInt(instance.myId);
+                if (socket != null)
+                {
+                    socket.BeginSend(_packet.ToArray(),_packet.Length(),null,null);
+                    
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Log($"Error sending data to server via udp: {ex}");
+            }
+        }
+
+ 
+
+        private void ReceiveCallback(IAsyncResult _result)
+        {
+            try
+            {
+                byte[] _data = socket.EndReceive(_result, ref endPoint);
+               
+                socket.BeginReceive(ReceiveCallback, null);
+
+                if (_data.Length < 4)
+                {
+                    return;
+                }
+
+                HandleData(_data);
+            }
+            catch
+            {
+
+            }
+        }
+
+        private void HandleData(byte[] _data)
+        {
+            using (Packet _packet = new Packet(_data))
+            {
+                int _packetLength = _packet.ReadInt();
+                _data = _packet.ReadBytes(_packetLength);
+            }
+
+
+            ThreadManager.ExecuteOnMainThread(() =>
+            {
+                using (Packet _packet = new Packet(_data))
+                {
+                    int _packetId = _packet.ReadInt();
+                    packetHandlers[_packetId](_packet);
+                }
+            });
+
+
+        }
+
+
+    }
+
 
 
     /// <summary> Initalize the packet handlers so that we can properly handle information sent from server. </summary>
@@ -251,10 +341,7 @@ public class Client : MonoBehaviour
         packetHandlers = new Dictionary<int, PacketHandler>()
         {
             {(int)ServerPackets.welcome,ClientHandle.Welcome },
-            {(int)ServerPackets.addChatter,ClientHandle.AddChatter },
-            {(int)ServerPackets.sendChatterMessage,ClientHandle.SendMessage },
-            {(int)ServerPackets.chatterDisconnected,ClientHandle.ChatterDisconnected },
-            {(int)ServerPackets.serverChatMessage,ClientHandle.ServerChatMessage },
+            {(int)ServerPackets.udpTest,ClientHandle.UDPTest }
         };
         Debug.Log("Initialized packets.");
     }
@@ -269,7 +356,7 @@ public class Client : MonoBehaviour
         if (Time.time - lastMessageSentTime >= messageSendDelay)
         {
             
-            ClientSend.ChatterMessage(msg);
+
             lastMessageSentTime = Time.time;
             return true;
         }

@@ -13,6 +13,7 @@ namespace WebcamChatApp_Server
         public int id;
         public Chatter chatter;
         public TCP tcp;
+        public UDP udp;
 
         public bool shouldDisconnect = false;
 
@@ -20,6 +21,7 @@ namespace WebcamChatApp_Server
         {
             id = _clientId;
             tcp = new TCP(id);
+            udp = new UDP(id);
         }
 
         public class TCP
@@ -77,7 +79,7 @@ namespace WebcamChatApp_Server
                     int _byteLength = stream.EndRead(_result);
                     if (_byteLength <= 0)
                     {
-                        Server.clients[id].Disconnect();
+                        //Server.clients[id].Disconnect();
                         return;
                     }
 
@@ -94,7 +96,7 @@ namespace WebcamChatApp_Server
                 {
 
                     Console.WriteLine($"Error receiving TCP data: {ex}");
-                    Server.clients[id].Disconnect();
+                    //Server.clients[id].Disconnect();
                 }
             }
 
@@ -157,56 +159,69 @@ namespace WebcamChatApp_Server
 
         }
 
-        public void SendIntoChat(string _playerName)
+        public class UDP
         {
-            chatter = new Chatter(id, _playerName);
+            public IPEndPoint endPoint;
 
+            private int id;
 
-            foreach (Client _client in Server.clients.Values)
+            public UDP(int _id)
             {
-                if (_client.chatter != null)
+                id = _id;
+            }
+
+            public void Connect(IPEndPoint _endPoint)
+            {
+                endPoint = _endPoint;
+                ServerSend.UDPTest(id);
+            }
+
+            public void SendData(Packet _packet)
+            {
+                Server.SendUDPData(endPoint, _packet);
+            }
+
+            public void HandleData(Packet _packetData)
+            {
+                int _packetLength = _packetData.ReadInt();
+                byte[] _packetBytes = _packetData.ReadBytes(_packetLength);
+
+                ThreadManager.ExecuteOnMainThread(() =>
                 {
-                    if (_client.id != id)
+                    using (Packet _packet = new Packet(_packetBytes))
                     {
-                        ServerSend.AddChatter(id, _client.chatter);
+                        int _packetId = _packet.ReadInt();
+                        Server.packetHandlers[_packetId](id, _packet);
                     }
-                }
+                });
+
+
             }
-
-
-            foreach (Client _client in Server.clients.Values)
-            {
-                if (_client.chatter != null)
-                {
-                    ServerSend.AddChatter(_client.id, chatter);
-                }
-            }
-            ServerSend.ServerChatMessage($"{_playerName} joined the chat.");
-
         }
 
-        public void Disconnect()
-        {
+
+        //public void Disconnect()
+        //{
 
 
-            Console.WriteLine($"{tcp.socket.Client.RemoteEndPoint} has disconnected.");
-            string _username = chatter.username;
-            ThreadManager.ExecuteOnMainThread(() =>
-            {
-                chatter = null;
-            });
-
-
-
-            tcp.Disconnect();
-
-            ServerSend.ChatterDisconnected(id);
-            ServerSend.ServerChatMessage($"{_username} disconnected from chat.");
+        //    Console.WriteLine($"{tcp.socket.Client.RemoteEndPoint} has disconnected.");
+        //    string _username = chatter.username;
+        //    ThreadManager.ExecuteOnMainThread(() =>
+        //    {
+        //        chatter = null;
+        //    });
 
 
 
+        //    tcp.Disconnect();
 
-        }
+        //    ServerSend.ChatterDisconnected(id);
+        //    ServerSend.ServerChatMessage($"{_username} disconnected from chat.");
+
+
+
+
+        //}
 
         public void LeaveChat()
         {
