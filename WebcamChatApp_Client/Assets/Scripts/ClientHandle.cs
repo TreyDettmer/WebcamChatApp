@@ -31,7 +31,6 @@ public class ClientHandle : MonoBehaviour
     {
         int _id = _packet.ReadInt();
         string _username = _packet.ReadString();
-
         AppManager.instance.AddChatter(_id, _username);
 
     }
@@ -61,12 +60,13 @@ public class ClientHandle : MonoBehaviour
     public static void ChatterDisconnected(Packet _packet)
     {
         int _id = _packet.ReadInt();
-        Destroy(AppManager.chatters[_id].gameObject);
-        AppManager.chatters.Remove(_id);
-        if (MainManager.instance != null)
-        {
-            //MainManager.instance.UpdateLobbyPanel();
-        }
+
+        AppManager.instance.RemoveChatter(_id);
+        //if (MainManager.instance != null)
+        //{
+        //    AppManager.instance.RemoveChatter(_id);
+        //    //MainManager.instance.UpdateLobbyPanel();
+        //}
        
     }
 

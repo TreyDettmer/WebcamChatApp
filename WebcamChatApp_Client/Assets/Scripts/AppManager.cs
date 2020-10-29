@@ -53,6 +53,21 @@ public class AppManager : MonoBehaviour
         _chatter.GetComponent<ChatterManager>().id = _id;
         _chatter.GetComponent<ChatterManager>().username = _username;
         chatters.Add(_id, _chatter.GetComponent<ChatterManager>());
+
+        if (GridManager.instance != null)
+        {
+            GridManager.instance.AddChatterGridElement(_id);
+        }
+    }
+
+    public void RemoveChatter(int _id)
+    {
+        if (GridManager.instance != null)
+        {
+            GridManager.instance.RemoveChatterGridElement(_id);
+        }
+        Destroy(chatters[_id].gameObject);
+        chatters.Remove(_id);
     }
 
     public void Quit()

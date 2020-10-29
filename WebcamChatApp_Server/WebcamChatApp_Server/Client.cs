@@ -250,7 +250,7 @@ namespace WebcamChatApp_Server
                     ServerSend.AddChatter(_client.id, chatter);
                 }
             }
-            ServerSend.ServerChatMessage($"{_playerName} joined the chat.");
+            ServerSend.ServerChatMessage(id,$"{_playerName} joined the chat.");
 
         }
 

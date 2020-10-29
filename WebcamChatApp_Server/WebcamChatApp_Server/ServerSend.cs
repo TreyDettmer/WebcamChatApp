@@ -109,6 +109,16 @@ namespace WebcamChatApp_Server
             }
         }
 
+        public static void ServerChatMessage(int _exceptClient, string _msg)
+        {
+            using (Packet _packet = new Packet((int)ServerPackets.serverChatMessage))
+            {
+                _packet.Write(_msg);
+
+                SendTCPDataToAll(_exceptClient,_packet);
+            }
+        }
+
         public static void ChatterDisconnected(int _clientId)
         {
             using (Packet _packet = new Packet((int)ServerPackets.chatterDisconnected))
