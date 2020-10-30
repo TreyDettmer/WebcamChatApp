@@ -33,5 +33,12 @@ namespace WebcamChatApp_Server
             Console.WriteLine($"Recieved packet via UDP. Contains message: {_msg}");
         }
 
+        public static void WebcamFrame(int _fromClient, Packet _packet)
+        {
+            int _frameLength = _packet.ReadInt();
+            byte[] _frame = _packet.ReadBytes(_frameLength);
+            ServerSend.SendChatterWebcamFrame(_fromClient, _frameLength, _frame);
+        }
+
     }
 }

@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+
 
 public class ChatterWebcamHandle : MonoBehaviour
 {
@@ -16,6 +18,10 @@ public class ChatterWebcamHandle : MonoBehaviour
     [SerializeField] private TextMeshProUGUI usernameTMP;
     [SerializeField] private Image mutedIcon;
     [SerializeField] private Shader shader;
+
+    [SerializeField] private RectTransform infoPanelRect;
+    [SerializeField] private RectTransform userNameTMPRect;
+    [SerializeField] private RectTransform mutedRect;
 
     // Start is called before the first frame update
     void Start()
@@ -55,5 +61,56 @@ public class ChatterWebcamHandle : MonoBehaviour
     {
         bMuted = _bMuted;
         mutedIcon.enabled = !bMuted;
+    }
+
+    public void UpdateChildren()
+    {
+        //infoPanelRect.sizeDelta = new Vector2(webcamRawImage.rectTransform.rect.width, webcamRawImage.rectTransform.rect.height / 6f);
+        //userNameTMPRect.anchoredPosition = new Vector2(20f, -62.5f);
+        //userNameTMPRect.sizeDelta = new Vector2(infoPanelRect.rect.width * .9f, infoPanelRect.rect.height);
+        //mutedRect.anchoredPosition = new Vector2(985, -62.5f);
+        //mutedRect.sizeDelta = new Vector2(infoPanelRect.rect.height, infoPanelRect.rect.height);
+        
+    }
+
+    public void SetWebcamImage(byte[] bytes)
+    {
+        try
+        {
+            Texture2D blank = new Texture2D(100, 75);
+            blank.LoadRawTextureData(bytes);
+            blank.Apply();
+            TextureScale.Bilinear(blank, 320, 180);
+            //Texture2D webCamTex2D = ToTexture2D(webcamRawImage.texture);
+            
+            //webCamTex2D.LoadRawTextureData(bytes);
+            //webCamTex2D.Apply();
+            webcamRawImage.texture = blank;
+            //TextureScale.Bilinear(_tex, 320, 180);
+            webcamRawImage.material.mainTexture = blank;
+            
+        }
+        catch (Exception _ex)
+        {
+            Debug.Log($"Issue copying texture onto grid element: {_ex}");
+        }
+
+    }
+
+    private Texture2D ToTexture2D(Texture tex)
+    {
+        try
+        {
+            Texture2D dest = new Texture2D(tex.width, tex.height, TextureFormat.RGB24, false);
+            dest.Apply(false);
+            Graphics.CopyTexture(tex, dest);
+            return dest;
+        }
+        catch (Exception _ex)
+        {
+            Debug.Log($"Issue converting texture to texture2D: {_ex}");
+            return null;
+        }
+
     }
 }

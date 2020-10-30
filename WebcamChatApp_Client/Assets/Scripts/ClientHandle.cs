@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using UnityEngine;
@@ -89,5 +90,24 @@ public class ClientHandle : MonoBehaviour
         string _msg = _packet.ReadString();
         Debug.Log($"Recieved packet via UDP. Contains message: {_msg}");
         ClientSend.UDPTestReceived();
+    }
+
+    public static void ChatterWebcamFrame(Packet _packet)
+    {
+        try
+        {
+            int _clientId = _packet.ReadInt();
+            int _frameLength = _packet.ReadInt();
+            byte[] _frame = _packet.ReadBytes(_frameLength);
+
+            if (GridManager.instance != null)
+            {
+                GridManager.instance.UpdateChatterWebcam(_clientId, _frame);
+            }
+        }
+        catch (Exception _ex)
+        {
+            Debug.Log($"Error handling received texture data: {_ex}");
+        }
     }
 }

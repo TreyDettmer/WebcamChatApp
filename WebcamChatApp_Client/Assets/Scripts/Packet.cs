@@ -18,14 +18,16 @@ public enum ServerPackets
     udpTest,
     chatterDisconnected,
     addChatter,
-    serverChatMessage
+    serverChatMessage,
+    chatterWebcamFrame
 }
 
 /// <summary>Sent from client to server.</summary>
 public enum ClientPackets
 {
     welcomeReceived = 1,
-    udpTestReceived
+    udpTestReceived,
+    webcamFrame
 }
 
 public class Packet : IDisposable

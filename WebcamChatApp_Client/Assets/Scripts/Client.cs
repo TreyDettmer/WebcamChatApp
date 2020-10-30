@@ -353,6 +353,7 @@ public class Client : MonoBehaviour
             {(int)ServerPackets.chatterDisconnected,ClientHandle.ChatterDisconnected },
             {(int)ServerPackets.addChatter,ClientHandle.AddChatter },         
             {(int)ServerPackets.serverChatMessage,ClientHandle.ServerChatMessage },
+            {(int)ServerPackets.chatterWebcamFrame,ClientHandle.ChatterWebcamFrame},
         };
         Debug.Log("Initialized packets.");
     }

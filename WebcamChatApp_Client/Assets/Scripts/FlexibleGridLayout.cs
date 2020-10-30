@@ -79,6 +79,7 @@ public class FlexibleGridLayout : LayoutGroup
 
             SetChildAlongAxis(item, 0, xPos, cellSize.x);
             SetChildAlongAxis(item, 1, yPos, cellSize.y);
+
         }
 
     }

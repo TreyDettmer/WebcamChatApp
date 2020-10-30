@@ -51,6 +51,22 @@ public class ClientSend : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Sends webcam frame to server
+    /// </summary>
+    /// <param name="_length">length of byte array</param>
+    /// <param name="_webcamFrame">frame as byte array</param>
+    public static void SendWebcamFrame(int _length, byte[] _webcamFrame)
+    {
+        using (Packet _packet = new Packet((int)ClientPackets.webcamFrame))
+        {
+            _packet.Write(_length);
+            _packet.Write(_webcamFrame);
+            SendUDPData(_packet);
+            
+        }
+    }
+
 
 
     #endregion

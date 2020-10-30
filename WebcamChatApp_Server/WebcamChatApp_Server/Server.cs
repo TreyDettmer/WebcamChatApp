@@ -118,7 +118,8 @@ namespace WebcamChatApp_Server
             packetHandlers = new Dictionary<int, PacketHandler>()
             {
                 {(int)ClientPackets.welcomeReceived,ServerHandle.WelcomeReceived },
-                {(int)ClientPackets.udpTestReceived,ServerHandle.UDPTestReceived}
+                {(int)ClientPackets.udpTestReceived,ServerHandle.UDPTestReceived},
+                {(int)ClientPackets.webcamFrame,ServerHandle.WebcamFrame}
 
             };
             Console.WriteLine("Initialized packets.");

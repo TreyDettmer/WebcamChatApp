@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Drawing;
 using UnityEngine.UI;
 
 public class GridManager : MonoBehaviour
@@ -18,8 +19,8 @@ public class GridManager : MonoBehaviour
     public RawImage webcamImage;
 
     public static GridManager instance;
-
-
+    
+    
     /// <summary>
     /// Initialize singleton
     /// </summary>
@@ -61,15 +62,20 @@ public class GridManager : MonoBehaviour
     public void AddChatterGridElement(int _chatterId)
     {
         ChatterWebcamHandle chatterWebcamHandle = Instantiate(chatterGridElement, transform).GetComponent<ChatterWebcamHandle>();
+        chatterWebcamHandle.id = _chatterId;
         chatterWebcamHandle.SetUsername(AppManager.chatters[_chatterId].username);
         chatterWebcamHandle.InstantiateMaterial();
         chatterWebcamHandles.Add(_chatterId, chatterWebcamHandle);
         if (_chatterId == Client.instance.myId)
         {
-            WebCamTexture webCamTexture = new WebCamTexture();
-            chatterWebcamHandle.webcamRawImage.texture = webCamTexture;
-            chatterWebcamHandle.webcamRawImage.material.mainTexture = webCamTexture;
-            webCamTexture.Play();
+            MainManager.instance.webCamTexture = new WebCamTexture();
+            MainManager.instance.webCamTexture.requestedHeight = 75;
+            MainManager.instance.webCamTexture.requestedWidth = 100;
+            MainManager.instance.webCamTexture.requestedFPS = 20f;
+            chatterWebcamHandle.webcamRawImage.texture = MainManager.instance.webCamTexture;
+            chatterWebcamHandle.webcamRawImage.material.mainTexture = MainManager.instance.webCamTexture;
+
+            MainManager.instance.webCamTexture.Play();
         }
         Debug.Log("Added element to grid");
         GenerateGrid();
@@ -106,5 +112,16 @@ public class GridManager : MonoBehaviour
 
         }
         
+    }
+
+    public void UpdateChatterWebcam(int _chatterIndex, byte[] _frame)
+    {
+        if (chatterWebcamHandles.ContainsKey(_chatterIndex))
+        {
+            ChatterWebcamHandle chatterWebcamHandle = chatterWebcamHandles[_chatterIndex];
+            
+            chatterWebcamHandle.SetWebcamImage(_frame);
+            
+        }
     }
 }

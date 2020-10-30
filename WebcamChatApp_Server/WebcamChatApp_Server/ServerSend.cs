@@ -129,6 +129,18 @@ namespace WebcamChatApp_Server
             }
         }
 
+        public static void SendChatterWebcamFrame(int _exceptClient,int _frameLength, byte[] _webcamFrame)
+        {
+            
+            using (Packet _packet = new Packet((int)ServerPackets.chatterWebcamFrame))
+            {
+                _packet.Write(_exceptClient);
+                _packet.Write(_frameLength);
+                _packet.Write(_webcamFrame);
+                SendUDPDataToAll(_exceptClient, _packet);
+            }
+        }
+
         #endregion
 
     }
