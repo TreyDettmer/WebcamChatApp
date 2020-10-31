@@ -19,7 +19,10 @@ public enum ServerPackets
     chatterDisconnected,
     addChatter,
     serverChatMessage,
-    chatterWebcamFrame
+    chatterWebcamFrame,
+    chatterWebcamAudio,
+    chatterEnabledWebcam,
+    chatterMutedMic
 }
 
 /// <summary>Sent from client to server.</summary>
@@ -27,7 +30,10 @@ public enum ClientPackets
 {
     welcomeReceived = 1,
     udpTestReceived,
-    webcamFrame
+    webcamFrame,
+    webcamAudio,
+    enabledWebcam,
+    mutedMic
 }
 
 public class Packet : IDisposable

@@ -141,6 +141,37 @@ namespace WebcamChatApp_Server
             }
         }
 
+        public static void SendChatterWebcamAudio(int _exceptClient,int _audioLength, byte[] _webcamAudio)
+        {
+            using (Packet _packet = new Packet((int)ServerPackets.chatterWebcamAudio))
+            {
+                _packet.Write(_exceptClient);
+                _packet.Write(_audioLength);
+                _packet.Write(_webcamAudio);
+                SendTCPDataToAll(_exceptClient, _packet);
+            }
+        }
+
+        public static void SendChatterWebcamEnabled(int _exceptClient,bool _enabled)
+        {
+            using (Packet _packet = new Packet((int)ServerPackets.chatterEnabledWebcam))
+            {
+                _packet.Write(_exceptClient);
+                _packet.Write(_enabled);
+                SendTCPDataToAll(_exceptClient, _packet);
+            }
+        }
+
+        public static void SendChatterMicMuted(int _exceptClient, bool _muted)
+        {
+            using (Packet _packet = new Packet((int)ServerPackets.chatterMutedMic))
+            {
+                _packet.Write(_exceptClient);
+                _packet.Write(_muted);
+                SendTCPDataToAll(_exceptClient, _packet);
+            }
+        }
+
         #endregion
 
     }

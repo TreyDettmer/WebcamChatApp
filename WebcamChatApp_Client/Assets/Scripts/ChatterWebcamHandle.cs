@@ -18,6 +18,9 @@ public class ChatterWebcamHandle : MonoBehaviour
     [SerializeField] private TextMeshProUGUI usernameTMP;
     [SerializeField] private Image mutedIcon;
     [SerializeField] private Shader shader;
+    [SerializeField] private Sprite mutedSprite;
+    [SerializeField] private Sprite unMutedSprite;
+
 
     [SerializeField] private RectTransform infoPanelRect;
     [SerializeField] private RectTransform userNameTMPRect;
@@ -60,7 +63,7 @@ public class ChatterWebcamHandle : MonoBehaviour
     public void SetMuted(bool _bMuted)
     {
         bMuted = _bMuted;
-        mutedIcon.enabled = !bMuted;
+        
     }
 
     public void UpdateChildren()
@@ -94,7 +97,24 @@ public class ChatterWebcamHandle : MonoBehaviour
         {
             Debug.Log($"Issue copying texture onto grid element: {_ex}");
         }
+    }
 
+    public void DisableWebcamImage()
+    {
+        webcamRawImage.texture = GuiManager.instance.webcamDisabledTexture;
+        webcamRawImage.material.mainTexture = GuiManager.instance.webcamDisabledTexture;
+    }
+
+    public void UpdateMuteIcon(bool _mute)
+    {
+        if (_mute)
+        {
+            mutedIcon.sprite = mutedSprite;
+        }
+        else
+        {
+            mutedIcon.sprite = unMutedSprite;
+        }
     }
 
     private Texture2D ToTexture2D(Texture tex)

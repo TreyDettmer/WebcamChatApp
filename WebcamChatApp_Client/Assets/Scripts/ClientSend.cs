@@ -67,6 +67,39 @@ public class ClientSend : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Sends webcam audio to server
+    /// </summary>
+    /// <param name="_length">length of byte array</param>
+    /// <param name="_webcamAudio">audio as byte array</param>
+    public static void SendWebcamAudio(int _length,byte[] _webcamAudio)
+    {
+        using (Packet _packet = new Packet((int)ClientPackets.webcamAudio))
+        {
+            _packet.Write(_length);
+            _packet.Write(_webcamAudio);
+            SendTCPData(_packet);
+        }
+    }
+
+    public static void SendEnabledWebcam(bool enabled)
+    {
+        using (Packet _packet = new Packet((int)ClientPackets.enabledWebcam))
+        {
+            _packet.Write(enabled);
+            SendTCPData(_packet);
+        }
+    }
+
+    public static void SendMutedMic(bool muted)
+    {
+        using (Packet _packet = new Packet((int)ClientPackets.mutedMic))
+        {
+            _packet.Write(muted);
+            SendTCPData(_packet);
+        }
+    }
+
 
 
     #endregion

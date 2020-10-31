@@ -8,7 +8,7 @@ public class GridManager : MonoBehaviour
 {
     //total background width & height: 1920 by 1080
     //grid elements should have aspect ratio of 4:3
-    
+
 
 
 
@@ -19,8 +19,8 @@ public class GridManager : MonoBehaviour
     public RawImage webcamImage;
 
     public static GridManager instance;
-    
-    
+
+
     /// <summary>
     /// Initialize singleton
     /// </summary>
@@ -52,7 +52,7 @@ public class GridManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     /// <summary>
@@ -65,17 +65,13 @@ public class GridManager : MonoBehaviour
         chatterWebcamHandle.id = _chatterId;
         chatterWebcamHandle.SetUsername(AppManager.chatters[_chatterId].username);
         chatterWebcamHandle.InstantiateMaterial();
+        chatterWebcamHandle.webcamRawImage.texture = GuiManager.instance.webcamDisabledTexture;
+        chatterWebcamHandle.webcamRawImage.material.mainTexture = GuiManager.instance.webcamDisabledTexture;
         chatterWebcamHandles.Add(_chatterId, chatterWebcamHandle);
         if (_chatterId == Client.instance.myId)
         {
-            MainManager.instance.webCamTexture = new WebCamTexture();
-            MainManager.instance.webCamTexture.requestedHeight = 75;
-            MainManager.instance.webCamTexture.requestedWidth = 100;
-            MainManager.instance.webCamTexture.requestedFPS = 20f;
-            chatterWebcamHandle.webcamRawImage.texture = MainManager.instance.webCamTexture;
-            chatterWebcamHandle.webcamRawImage.material.mainTexture = MainManager.instance.webCamTexture;
 
-            MainManager.instance.webCamTexture.Play();
+            MainManager.instance.SetChatterWebcamHandle(chatterWebcamHandle);
         }
         Debug.Log("Added element to grid");
         GenerateGrid();
@@ -111,7 +107,7 @@ public class GridManager : MonoBehaviour
             }
 
         }
-        
+
     }
 
     public void UpdateChatterWebcam(int _chatterIndex, byte[] _frame)
@@ -119,9 +115,31 @@ public class GridManager : MonoBehaviour
         if (chatterWebcamHandles.ContainsKey(_chatterIndex))
         {
             ChatterWebcamHandle chatterWebcamHandle = chatterWebcamHandles[_chatterIndex];
-            
+
             chatterWebcamHandle.SetWebcamImage(_frame);
-            
+
+        }
+    }
+
+    public void ChatterEnabledWebcam(int _chatterIndex, bool _enabled)
+    {
+        if (chatterWebcamHandles.ContainsKey(_chatterIndex))
+        {
+            ChatterWebcamHandle chatterWebcamHandle = chatterWebcamHandles[_chatterIndex];
+            if (_enabled == false)
+            {
+                chatterWebcamHandle.DisableWebcamImage();
+            }
+
+        }
+    }
+
+    public void ChatterMutedMic(int _chatterIndex, bool _muted)
+    {
+        if (chatterWebcamHandles.ContainsKey(_chatterIndex))
+        {
+            ChatterWebcamHandle chatterWebcamHandle = chatterWebcamHandles[_chatterIndex];
+            chatterWebcamHandle.UpdateMuteIcon(_muted);
         }
     }
 }

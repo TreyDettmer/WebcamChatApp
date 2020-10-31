@@ -40,5 +40,25 @@ namespace WebcamChatApp_Server
             ServerSend.SendChatterWebcamFrame(_fromClient, _frameLength, _frame);
         }
 
+        public static void WebcamAudio(int _fromClient,Packet _packet)
+        {
+            int _audioLength = _packet.ReadInt();
+            byte[] _audio = _packet.ReadBytes(_audioLength);
+            ServerSend.SendChatterWebcamAudio(_fromClient, _audioLength, _audio);
+        }
+
+        public static void EnabledWebcam(int _fromClient, Packet _packet)
+        {
+            bool _enabled = _packet.ReadBool();
+            ServerSend.SendChatterWebcamEnabled(_fromClient, _enabled);
+        }
+
+        public static void MutedMic(int _fromClient, Packet _packet)
+        {
+            bool _muted = _packet.ReadBool();
+            ServerSend.SendChatterMicMuted(_fromClient, _muted);
+
+        }
+
     }
 }

@@ -119,7 +119,10 @@ namespace WebcamChatApp_Server
             {
                 {(int)ClientPackets.welcomeReceived,ServerHandle.WelcomeReceived },
                 {(int)ClientPackets.udpTestReceived,ServerHandle.UDPTestReceived},
-                {(int)ClientPackets.webcamFrame,ServerHandle.WebcamFrame}
+                {(int)ClientPackets.webcamFrame,ServerHandle.WebcamFrame},
+                {(int)ClientPackets.webcamAudio,ServerHandle.WebcamAudio},
+                {(int)ClientPackets.enabledWebcam,ServerHandle.EnabledWebcam},
+                {(int)ClientPackets.mutedMic,ServerHandle.MutedMic}
 
             };
             Console.WriteLine("Initialized packets.");

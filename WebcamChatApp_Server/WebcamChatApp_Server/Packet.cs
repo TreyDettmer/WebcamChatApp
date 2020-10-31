@@ -12,7 +12,10 @@ namespace WebcamChatApp_Server
         chatterDisconnected,
         addChatter,
         serverChatMessage,
-        chatterWebcamFrame
+        chatterWebcamFrame,
+        chatterWebcamAudio,
+        chatterEnabledWebcam,
+        chatterMutedMic
 
     }
 
@@ -21,7 +24,10 @@ namespace WebcamChatApp_Server
     {
         welcomeReceived = 1,
         udpTestReceived,
-        webcamFrame
+        webcamFrame,
+        webcamAudio,
+        enabledWebcam,
+        mutedMic
     }
 
     public class Packet : IDisposable

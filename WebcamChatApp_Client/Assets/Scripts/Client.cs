@@ -354,6 +354,9 @@ public class Client : MonoBehaviour
             {(int)ServerPackets.addChatter,ClientHandle.AddChatter },         
             {(int)ServerPackets.serverChatMessage,ClientHandle.ServerChatMessage },
             {(int)ServerPackets.chatterWebcamFrame,ClientHandle.ChatterWebcamFrame},
+            {(int)ServerPackets.chatterWebcamAudio,ClientHandle.ChatterWebcamAudio},
+            {(int)ServerPackets.chatterEnabledWebcam,ClientHandle.ChatterEnabledWebcam},
+            {(int)ServerPackets.chatterMutedMic,ClientHandle.ChatterMutedMic},
         };
         Debug.Log("Initialized packets.");
     }

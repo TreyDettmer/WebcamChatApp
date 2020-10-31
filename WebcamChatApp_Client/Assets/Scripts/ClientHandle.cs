@@ -110,4 +110,36 @@ public class ClientHandle : MonoBehaviour
             Debug.Log($"Error handling received texture data: {_ex}");
         }
     }
+
+    public static void ChatterWebcamAudio(Packet _packet)
+    {
+        try
+        {
+            int _clientId = _packet.ReadInt();
+            int _audioLength = _packet.ReadInt();
+            byte[] _audio = _packet.ReadBytes(_audioLength);
+            MainManager.instance.PlayAudio(_clientId, _audio);
+
+
+        }
+        catch (Exception _ex)
+        {
+            Debug.Log($"Error handling received audio data: {_ex}");
+        }
+    }
+
+    public static void ChatterEnabledWebcam(Packet _packet)
+    {
+        int chatterId = _packet.ReadInt();
+        bool enabled = _packet.ReadBool();
+        GridManager.instance.ChatterEnabledWebcam(chatterId, enabled);
+    }
+
+    public static void ChatterMutedMic(Packet _packet)
+    {
+        int chatterId = _packet.ReadInt();
+        bool muted = _packet.ReadBool();
+        GridManager.instance.ChatterMutedMic(chatterId, muted);
+
+    }
 }
