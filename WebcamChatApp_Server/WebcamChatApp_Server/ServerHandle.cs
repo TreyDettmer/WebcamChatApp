@@ -42,9 +42,11 @@ namespace WebcamChatApp_Server
 
         public static void WebcamAudio(int _fromClient,Packet _packet)
         {
+            int _micChannels = _packet.ReadInt();
+            int _sampleRate = _packet.ReadInt();
             int _audioLength = _packet.ReadInt();
             byte[] _audio = _packet.ReadBytes(_audioLength);
-            ServerSend.SendChatterWebcamAudio(_fromClient, _audioLength, _audio);
+            ServerSend.SendChatterWebcamAudio(_fromClient, _audioLength, _audio,_micChannels,_sampleRate);
         }
 
         public static void EnabledWebcam(int _fromClient, Packet _packet)

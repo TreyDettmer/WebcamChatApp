@@ -72,13 +72,15 @@ public class ClientSend : MonoBehaviour
     /// </summary>
     /// <param name="_length">length of byte array</param>
     /// <param name="_webcamAudio">audio as byte array</param>
-    public static void SendWebcamAudio(int _length,byte[] _webcamAudio)
+    public static void SendWebcamAudio(int _length,byte[] _webcamAudio,int _channels,int _sampleRate)
     {
         using (Packet _packet = new Packet((int)ClientPackets.webcamAudio))
         {
+            _packet.Write(_channels);
+            _packet.Write(_sampleRate);
             _packet.Write(_length);
             _packet.Write(_webcamAudio);
-            SendTCPData(_packet);
+            SendUDPData(_packet);
         }
     }
 

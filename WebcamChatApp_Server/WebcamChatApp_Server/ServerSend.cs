@@ -141,14 +141,16 @@ namespace WebcamChatApp_Server
             }
         }
 
-        public static void SendChatterWebcamAudio(int _exceptClient,int _audioLength, byte[] _webcamAudio)
+        public static void SendChatterWebcamAudio(int _exceptClient,int _audioLength, byte[] _webcamAudio,int _micChannels,int _sampleRate)
         {
             using (Packet _packet = new Packet((int)ServerPackets.chatterWebcamAudio))
             {
                 _packet.Write(_exceptClient);
+                _packet.Write(_micChannels);
+                _packet.Write(_sampleRate);
                 _packet.Write(_audioLength);
                 _packet.Write(_webcamAudio);
-                SendTCPDataToAll(_exceptClient, _packet);
+                SendUDPDataToAll(_exceptClient, _packet);
             }
         }
 

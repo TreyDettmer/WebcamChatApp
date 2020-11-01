@@ -427,6 +427,9 @@ MonoBehaviour:
   chatterWebcamHandle: {fileID: 0}
   audioSource: {fileID: 0}
   micFrequency: 10000
+  modifiedFrequency: 22050
+  latency: 0.3
+  webcamFramerate: 20
 --- !u!4 &1002530765
 Transform:
   m_ObjectHideFlags: 0

@@ -23,12 +23,16 @@ public class MainManager : MonoBehaviour
     //PCMReaderCallback PCMmicDataCallback = MicDataCallback;
     public WebCamTexture webCamTexture;
     [HideInInspector]public ChatterWebcamHandle chatterWebcamHandle;
-    private float lastSentTime = 0f;
+    
     private Texture2D webCamTexture2D;
     private AudioClip mic;
     public AudioSource audioSource;
     public int micFrequency = 44100;
-    private int modifiedFrequency = 8000;
+    public int modifiedFrequency = 22050;
+    public float latency = .3f;
+    public float webcamFramerate = 20f;
+    
+    public List<byte[]> webcamLatencyBuffer = new List<byte[]>();
     private string microphoneDevice;
 
     bool bHasWebcam = false;
@@ -37,7 +41,9 @@ public class MainManager : MonoBehaviour
     bool bMicMuted= true;
 
     private int lastSample;
-
+    private float micLatencyTimer = 0f;
+    private float webcamLatencyTimer = 0f;
+    private float webcamFramerateTimer = 0f;
 
 
 
@@ -72,7 +78,8 @@ public class MainManager : MonoBehaviour
             webCamTexture = new WebCamTexture();
             webCamTexture.requestedHeight = 75;
             webCamTexture.requestedWidth = 100;
-            webCamTexture.requestedFPS = 20f;
+            webCamTexture.requestedFPS = webcamFramerate;
+            
             webCamTexture.deviceName = webcamDevices[0].name;
             //Debug.Log($"Found webcam: {webcamDevices[0].name}");
         }
@@ -87,12 +94,12 @@ public class MainManager : MonoBehaviour
             if (microphoneDevices.Length == 0)
             {
                 bHasMic = false;
-
+                Debug.Log("No microphone found");
             }
             else
             {
                 bHasMic = true;
-                //Debug.Log($"Found microphone: {microphoneDevices[0]}");
+                Debug.Log($"Found microphone: {microphoneDevices[0]}");
                 microphoneDevice = microphoneDevices[0];
                 SetupMic();
 
@@ -132,6 +139,7 @@ public class MainManager : MonoBehaviour
     {
 
         mic = Microphone.Start(microphoneDevice, true, 10, micFrequency);
+        
         while (Microphone.GetPosition(microphoneDevice) < 0) { }
 
         //audioSource.clip = AudioClip.Create("test", 10 * micFrequency, mic.channels, micFrequency, false);
@@ -204,45 +212,73 @@ public class MainManager : MonoBehaviour
         //    SendWebcamFrame();
         //}
         // send webcam frame 10 times a second
-        if (bHasWebcam)
-        {
-            if (bWebcamEnabled)
-            {
-                if (Time.time - lastSentTime >= .1f)
-                {
-                    SendWebcamFrame();
-                }
-            }
-        }
 
 
+
+        
+    }
+
+    private void FixedUpdate()
+    {
         if (bHasMic)
         {
-            //get mic audio
-            //https://forum.unity.com/threads/microphone-network-test.123776/
-            int pos = Microphone.GetPosition(microphoneDevice);
-            int diff = pos - lastSample;
-            if (diff > 0)
+            micLatencyTimer += Time.fixedDeltaTime;
+            if (micLatencyTimer >= latency)
             {
-                if (!bMicMuted)
+                micLatencyTimer = 0f;
+                //get mic audio
+                //https://forum.unity.com/threads/microphone-network-test.123776/
+                int pos = Microphone.GetPosition(microphoneDevice);
+                int diff = pos - lastSample;
+                if (diff > 0)
                 {
-                    float[] samples = new float[diff * 1];
-                    mic.GetData(samples, lastSample);
-                    byte[] b = ToByteArray(samples);
-                    //send mic audio to server as byte array
-                    ClientSend.SendWebcamAudio(b.Length, b);
-                    
+                    if (!bMicMuted)
+                    {
+                        float[] samples = new float[diff * mic.channels];
+                        mic.GetData(samples, lastSample);
+                        //float[] newSamples = DownSampleAudio(samples, mic);
+                        byte[] b = ToByteArray(samples);
+                        //send mic audio to server as byte array
+                        ClientSend.SendWebcamAudio(b.Length, b, mic.channels, micFrequency);
+
+                    }
+
+
                 }
-
-
+                lastSample = pos;
             }
-            lastSample = pos;
+        }
+        if (bHasWebcam)
+        {
+            webcamLatencyTimer += Time.fixedDeltaTime;
+            webcamFramerateTimer += Time.fixedDeltaTime;
 
+
+            if (bWebcamEnabled)
+            {
+                
+                SendWebcamFrame();
+                
+            }
             
         }
     }
 
-    public void PlayAudio(int _chatterId,byte[] _byteAudio)
+    public float[] DownSampleAudio(float[] _buffer,AudioClip _mic)
+    {
+        float modifier = (float)micFrequency / (float)modifiedFrequency;
+        float length = _mic.length;
+        int newNumberOfNewSamples = Mathf.FloorToInt(length * modifiedFrequency);
+        int newBuffLen = newNumberOfNewSamples * _mic.channels;
+        float[] newBuffer = new float[newBuffLen];
+        for (int i = 0; i < newBuffLen; i++)
+        {
+            newBuffer[i] = _buffer[Mathf.FloorToInt(i * modifier)];
+        }
+        return newBuffer;
+    }
+
+    public void PlayAudio(int _chatterId,byte[] _byteAudio,int _micChannels,int _sampleRate)
     {
         
         float[] floatAudio = ToFloatArray(_byteAudio);
@@ -250,36 +286,27 @@ public class MainManager : MonoBehaviour
         {
             ChatterWebcamHandle chatterWebcamHandle = GridManager.instance.chatterWebcamHandles[_chatterId];
             AudioSource src = chatterWebcamHandle.GetComponent<AudioSource>();
-            src.clip = AudioClip.Create("test", floatAudio.Length, 1, micFrequency, false);
+            src.clip = AudioClip.Create("test", floatAudio.Length, _micChannels, _sampleRate, false);
             src.clip.SetData(floatAudio, 0);
             if (!src.isPlaying) src.Play();
         }
         
     }
 
-    //https://forum.unity.com/threads/microphone-network-test.123776/
+    //https://stackoverflow.com/questions/4635769/how-do-i-convert-an-array-of-floats-to-a-byte-and-back
     public byte[] ToByteArray(float[] floatArray)
     {
-        int len = floatArray.Length * 4;
-        byte[] byteArray = new byte[len];
-        int pos = 0;
-        foreach (float f in floatArray)
-        {
-            byte[] data = BitConverter.GetBytes(f);
-            Array.Copy(data, 0, byteArray, pos, 4);
-            pos += 4;
-        }
+        
+        byte[] byteArray = new byte[floatArray.Length * sizeof(float)];
+        Buffer.BlockCopy(floatArray, 0, byteArray, 0, byteArray.Length);
         return byteArray;
     }
-    //https://forum.unity.com/threads/microphone-network-test.123776/
+    //https://stackoverflow.com/questions/4635769/how-do-i-convert-an-array-of-floats-to-a-byte-and-back
     public float[] ToFloatArray(byte[] byteArray)
     {
-        int len = byteArray.Length / 4;
-        float[] floatArray = new float[len];
-        for (int i = 0; i < byteArray.Length; i += 4)
-        {
-            floatArray[i / 4] = BitConverter.ToSingle(byteArray, i);
-        }
+       
+        float[] floatArray = new float[byteArray.Length / sizeof(float)];
+        Buffer.BlockCopy(byteArray, 0, floatArray, 0, byteArray.Length);
         return floatArray;
     }
 
@@ -379,7 +406,21 @@ public class MainManager : MonoBehaviour
 
     public void SendWebcamFrame()
     {
-        lastSentTime = Time.time;
+        
+        
+            
+        //if we have enough stored frames to match the latency
+        if (webcamLatencyBuffer.Count >= Mathf.CeilToInt(webcamFramerate * latency * 2f))
+        {
+            byte[] frameToSend = webcamLatencyBuffer[0];
+            //send the byte array to the server
+            ClientSend.SendWebcamFrame(frameToSend.Length, frameToSend);
+
+            webcamLatencyBuffer.RemoveAt(0);
+        }
+        
+
+        
         
         if (webCamTexture != null)
         {
@@ -391,8 +432,13 @@ public class MainManager : MonoBehaviour
             TextureScale.Bilinear(_tex, 100, 75);
             //get the texture2D as a byte array
             byte[] texBytes = _tex.GetRawTextureData();
-            //send the byte array to the server
-            ClientSend.SendWebcamFrame(texBytes.Length, texBytes);
+
+            //save the frame data to the webcam latency buffer
+            webcamLatencyBuffer.Add(texBytes);
+
+
+            
+
         }
     }
 }

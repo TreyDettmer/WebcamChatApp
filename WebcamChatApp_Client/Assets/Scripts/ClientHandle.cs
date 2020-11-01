@@ -116,9 +116,11 @@ public class ClientHandle : MonoBehaviour
         try
         {
             int _clientId = _packet.ReadInt();
+            int _micChannels = _packet.ReadInt();
+            int _sampleRate = _packet.ReadInt();
             int _audioLength = _packet.ReadInt();
             byte[] _audio = _packet.ReadBytes(_audioLength);
-            MainManager.instance.PlayAudio(_clientId, _audio);
+            MainManager.instance.PlayAudio(_clientId, _audio,_micChannels,_sampleRate);
 
 
         }
