@@ -35,8 +35,8 @@ public class MainManager : MonoBehaviour
     public List<byte[]> webcamLatencyBuffer = new List<byte[]>();
     private string microphoneDevice;
 
-    bool bHasWebcam = false;
-    bool bHasMic = false;
+    public bool bHasWebcam = false;
+    public bool bHasMic = false;
     bool bWebcamEnabled = false;
     bool bMicMuted= true;
 
@@ -45,7 +45,8 @@ public class MainManager : MonoBehaviour
     private float webcamLatencyTimer = 0f;
     private float webcamFramerateTimer = 0f;
 
-
+    public bool bHoldingSpacebar = false;
+    private bool bSpacebarRoutineRunning = false;
 
 
     /// <summary>
@@ -67,44 +68,11 @@ public class MainManager : MonoBehaviour
     private void Start()
     {
         audioSource = GetComponent<AudioSource>();
-        WebCamDevice[] webcamDevices = WebCamTexture.devices;
-        if (webcamDevices.Length == 0)
-        {
-            bHasWebcam = false;
-        }
-        else
-        {
-            bHasWebcam = true;
-            webCamTexture = new WebCamTexture();
-            webCamTexture.requestedHeight = 75;
-            webCamTexture.requestedWidth = 100;
-            webCamTexture.requestedFPS = webcamFramerate;
-            
-            webCamTexture.deviceName = webcamDevices[0].name;
-            //Debug.Log($"Found webcam: {webcamDevices[0].name}");
-        }
-        if (Client.instance.username == "bob")
-        {
-            Debug.Log("Bob");
-            bHasMic = false;
-        }
-        else
-        {
-            string[] microphoneDevices = Microphone.devices;
-            if (microphoneDevices.Length == 0)
-            {
-                bHasMic = false;
-                Debug.Log("No microphone found");
-            }
-            else
-            {
-                bHasMic = true;
-                Debug.Log($"Found microphone: {microphoneDevices[0]}");
-                microphoneDevice = microphoneDevices[0];
-                SetupMic();
+        
+        GuiManager.instance.EnableWebcamOptionsWindow(WebCamTexture.devices);
+        GuiManager.instance.EnableMicOptionsWindow(Microphone.devices);
 
-            }
-        }
+
         
 
     }
@@ -116,12 +84,51 @@ public class MainManager : MonoBehaviour
     /// Change the webcam device
     /// </summary>
     /// <param name="_device">webcam device</param>
-    private void ChangeWebcamDevice(WebCamDevice _device)
+    public bool ChangeWebcamDevice(string _deviceName)
     {
-        if (webCamTexture != null)
+
+        if (_deviceName != "")
         {
-            webCamTexture.deviceName = _device.name;
+                
+            webCamTexture = new WebCamTexture();
+            webCamTexture.requestedHeight = 75;
+            webCamTexture.requestedWidth = 100;
+            webCamTexture.requestedFPS = webcamFramerate;
+            webCamTexture.deviceName = _deviceName;
+            bHasWebcam = true;
         }
+        else
+        {
+            bHasWebcam = false;
+        }
+        
+        return true;
+
+    }
+
+    public bool ChangeMicDevice(string _deviceName)
+    {
+       
+        if (_deviceName == "")
+        {
+            
+            bHasMic = false;
+        }
+        else
+        {
+            if (Client.instance.username == "bob")
+            {
+                Debug.Log("Bob");
+                bHasMic = false;
+            }
+            else
+            {
+                microphoneDevice = _deviceName;
+                bHasMic = true;
+                SetupMic();
+            }
+        }
+        return true;
     }
 
     /// <summary>
@@ -213,54 +220,131 @@ public class MainManager : MonoBehaviour
         //}
         // send webcam frame 10 times a second
 
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (bSpacebarRoutineRunning)
+            {
+                StopCoroutine(spaceBarUnmuteDelay());
+            }
+            StartCoroutine(spaceBarUnmuteDelay());
+        }    
 
+        if (Input.GetKeyUp(KeyCode.Space))
+        {
+            if (bHoldingSpacebar)
+            {
+                //update button appearance
+                GuiManager.instance.muteButton.GetComponent<Image>().sprite = GuiManager.instance.mutedIcon;
+                MuteMicrophone(true);
+                GridManager.instance.chatterWebcamHandles[Client.instance.myId].UpdateMuteIcon(true);
+            }
+            bHoldingSpacebar = false;
+            if (bSpacebarRoutineRunning)
+            {
+                StopCoroutine(spaceBarUnmuteDelay());
+            }
+        }
 
         
+    }
+
+
+    IEnumerator spaceBarUnmuteDelay()
+    {
+        bSpacebarRoutineRunning = true;
+        yield return new WaitForSeconds(.3f);
+        if (Input.GetKey(KeyCode.Space))
+        {
+            bHoldingSpacebar = true;
+            //update button appearance
+            GuiManager.instance.muteButton.GetComponent<Image>().sprite = GuiManager.instance.unmutedIcon;
+            MuteMicrophone(false);
+            GridManager.instance.chatterWebcamHandles[Client.instance.myId].UpdateMuteIcon(false);
+        }
+        bSpacebarRoutineRunning = false;
     }
 
     private void FixedUpdate()
     {
         if (bHasMic)
         {
-            micLatencyTimer += Time.fixedDeltaTime;
-            if (micLatencyTimer >= latency)
+            try
             {
-                micLatencyTimer = 0f;
-                //get mic audio
-                //https://forum.unity.com/threads/microphone-network-test.123776/
-                int pos = Microphone.GetPosition(microphoneDevice);
-                int diff = pos - lastSample;
-                if (diff > 0)
+                micLatencyTimer += Time.fixedDeltaTime;
+                if (micLatencyTimer >= latency)
                 {
-                    if (!bMicMuted)
+                    micLatencyTimer = 0f;
+                    //get mic audio
+                    //https://forum.unity.com/threads/microphone-network-test.123776/
+                    int pos = Microphone.GetPosition(microphoneDevice);
+                    int diff = pos - lastSample;
+                    if (diff > 0)
                     {
-                        float[] samples = new float[diff * mic.channels];
-                        mic.GetData(samples, lastSample);
-                        //float[] newSamples = DownSampleAudio(samples, mic);
-                        byte[] b = ToByteArray(samples);
-                        //send mic audio to server as byte array
-                        ClientSend.SendWebcamAudio(b.Length, b, mic.channels, micFrequency);
+                        if (!bMicMuted)
+                        {
+                            float[] samples = new float[diff * mic.channels];
+                            mic.GetData(samples, lastSample);
+                            //float[] newSamples = DownSampleAudio(samples, mic);
+                            byte[] b = ToByteArray(samples);
+                            //send mic audio to server as byte array
+                            ClientSend.SendWebcamAudio(b.Length, b, mic.channels, micFrequency);
+
+                        }
+
 
                     }
-
-
+                    lastSample = pos;
                 }
-                lastSample = pos;
+            }
+            catch (Exception _ex)
+            {
+                Debug.Log($"Issue processing mic data: {_ex}");
             }
         }
         if (bHasWebcam)
         {
-            webcamLatencyTimer += Time.fixedDeltaTime;
-            webcamFramerateTimer += Time.fixedDeltaTime;
-
-
-            if (bWebcamEnabled)
+            try
             {
-                
-                SendWebcamFrame();
-                
+                webcamLatencyTimer += Time.fixedDeltaTime;
+                webcamFramerateTimer += Time.fixedDeltaTime;
+
+
+                if (bWebcamEnabled)
+                {
+
+                    SendWebcamFrame();
+
+                }
+            }
+            catch (Exception _ex)
+            {
+                Debug.Log($"Issue processing webcam data: {_ex}");
             }
             
+        }
+    }
+
+    /// <summary>
+    /// Called when game window changes focus
+    /// </summary>
+    /// <param name="focus"></param>
+    private void OnApplicationFocus(bool focus)
+    {
+        if (focus == false)
+        {
+            //mute if we're holding the space bar when we click on another application
+            if (bHoldingSpacebar)
+            {
+                //update button appearance
+                GuiManager.instance.muteButton.GetComponent<Image>().sprite = GuiManager.instance.mutedIcon;
+                MuteMicrophone(true);
+                GridManager.instance.chatterWebcamHandles[Client.instance.myId].UpdateMuteIcon(true);
+            }
+            bHoldingSpacebar = false;
+            if (bSpacebarRoutineRunning)
+            {
+                StopCoroutine(spaceBarUnmuteDelay());
+            }
         }
     }
 
@@ -410,7 +494,7 @@ public class MainManager : MonoBehaviour
         
             
         //if we have enough stored frames to match the latency
-        if (webcamLatencyBuffer.Count >= Mathf.CeilToInt(webcamFramerate * latency * 2f))
+        if (webcamLatencyBuffer.Count >= Mathf.CeilToInt(webcamFramerate * latency * 2.3f))
         {
             byte[] frameToSend = webcamLatencyBuffer[0];
             //send the byte array to the server
