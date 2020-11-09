@@ -1,6 +1,6 @@
 # WebcamChatApp
 
-This is a video call application that I made in Unity. 
+This is a video call application that I made in Unity. Download the companion chat room application [here.](https://github.com/TreyDettmer/MessengerApp)
 
 ## Known Issues
 - The audio is pretty glitchy.
